@@ -54,63 +54,12 @@ jobs:
       # Aikido CI Scanner — corrected inputs only
       # Docs: https://docs.aikido.dev/ci-integrations/github-actions
       # -----------------------------------------------------------------------
-      - name: Resolve Aikido commit context
-        id: commits
+      - name: Scan Docker image with Aikido Security
+        env:
+          AIKIDO_API_KEY: ${{ secrets.AIKIDO_API_KEY }}
         run: |
-            CURRENT_SHA="${{ github.sha }}"
-   
-            if [ "${{ github.event_name }}" = "pull_request" ]; then
-              # PR: base is the target branch HEAD before this PR
-              BASE_SHA="${{ github.event.pull_request.base.sha }}"
-            else
-              # Push / schedule / dispatch: use git parent
-              BASE_SHA=$(git rev-parse HEAD~1 2>/dev/null || git rev-list --max-parents=0 HEAD)
-            fi
-   
-            echo "AIKIDO_COMMIT_ID=${CURRENT_SHA}"    >> $GITHUB_ENV
-            echo "AIKIDO_BASE_COMMIT_ID=${BASE_SHA}"  >> $GITHUB_ENV
-            echo "AIKIDO_REPO=${{ github.repository }}" >> $GITHUB_ENV
-            echo "AIKIDO_BRANCH=${{ github.ref_name }}" >> $GITHUB_ENV
-   
-            echo "commit_id=${CURRENT_SHA}" >> $GITHUB_OUTPUT
-            echo "base_commit_id=${BASE_SHA}" >> $GITHUB_OUTPUT
-   
-      - name: Show resolved SHAs (debug)
-        run: |
-            echo "Current : $AIKIDO_COMMIT_ID"
-            echo "Base    : $AIKIDO_BASE_COMMIT_ID"
-            if [ "$AIKIDO_COMMIT_ID" = "$AIKIDO_BASE_COMMIT_ID" ]; then
-              echo "ERROR: commit and base are identical — scan will fail"
-              exit 1
-            fi
-   
-      - name: Run Aikido Security Scan
-        uses: AikidoSec/github-actions-workflow@v1.0.13
-        with:
-            secret-key: ${{ secrets.AIKIDO_TOKEN }}
-            github-token: ${{ secrets.GITHUB_TOKEN }}
-            minimum-severity: HIGH
-            fail-on-sast-scan: true
-            fail-on-dependency-scan: true
-            fail-on-iac-scan: false
-            timeout-seconds: 180
-            fail-on-timeout: false
-            post-scan-status-comment: on
-            post-sast-review-comments: on
-  # ---------------------------------------------------------------------------
-  # JOB 3: Dependency review on PRs (GitHub native SCA complement)
-  # ---------------------------------------------------------------------------
-  dependency-review:
-    name: "Dependency Review (PR only)"
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Dependency Review
-        uses: actions/dependency-review-action@v4
-        with:
-          fail-on-severity: high
-          comment-summary-in-pr: always
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aikidosecurity/local-scanner scan  \
+            --repositoryname ${{ github.event.repository.name }}   --branchname ${{ github.ref_name }} \
+            --apikey "$AIKIDO_API_KEY"
