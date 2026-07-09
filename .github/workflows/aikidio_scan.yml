@@ -67,4 +67,5 @@ jobs:
             echo "No High vulnerabilities were detected."
           else
             echo "High vulnerabilities were detected, Check Akidio Dashboard using above links"
+            exit 1
           fi
