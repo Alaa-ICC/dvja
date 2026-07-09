@@ -60,6 +60,6 @@ jobs:
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            aikidosecurity/local-scanner scan  \
+            aikidosecurity/local-scanner scan .  \
             --repositoryname ${{ github.event.repository.name }}   --branchname ${{ github.ref_name }} \
             --apikey "$AIKIDO_API_KEY"
