@@ -54,12 +54,13 @@ jobs:
       # Aikido CI Scanner — corrected inputs only
       # Docs: https://docs.aikido.dev/ci-integrations/github-actions
       # -----------------------------------------------------------------------
-      - name: Scan Docker image with Aikido Security
+      - name: Scan Aikido Security
         env:
           AIKIDO_API_KEY: ${{ secrets.AIKIDO_API_KEY }}
         run: |
           docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            aikidosecurity/local-scanner scan .  \
+            -v "$(pwd):/workspace" \
+            aikidosecurity/local-scanner scan /workspace --fail-on high  \
             --repositoryname ${{ github.event.repository.name }}   --branchname ${{ github.ref_name }} \
             --apikey "$AIKIDO_API_KEY"
