@@ -64,3 +64,9 @@ jobs:
             aikidosecurity/local-scanner scan /workspace --fail-on high  \
             --repositoryname ${{ github.event.repository.name }}   --branchname ${{ github.ref_name }} \
             --apikey "$AIKIDO_API_KEY"
+          if [ $? -eq 0 ]; then
+            echo "No High vulnerabilities were detected."
+          else
+            echo "High vulnerabilities were detected, Check Akidio Dashboard using above links"
+            exit 1
+          fi
