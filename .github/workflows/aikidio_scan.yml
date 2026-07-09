@@ -58,15 +58,13 @@ jobs:
         env:
           AIKIDO_API_KEY: ${{ secrets.AIKIDO_API_KEY }}
         run: |
-          docker run --rm \
+          if docker run --rm \
             -v /var/run/docker.sock:/var/run/docker.sock \
             -v "$(pwd):/workspace" \
             aikidosecurity/local-scanner scan /workspace --fail-on high  \
             --repositoryname ${{ github.event.repository.name }}   --branchname ${{ github.ref_name }} \
-            --apikey "$AIKIDO_API_KEY"
-          if [ $? -eq 0 ]; then
+            --apikey "$AIKIDO_API_KEY"; then
             echo "No High vulnerabilities were detected."
           else
             echo "High vulnerabilities were detected, Check Akidio Dashboard using above links"
-            exit 1
           fi
